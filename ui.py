@@ -130,15 +130,14 @@ class ImageViewerApp:
         self.last_x = event.x
         self.last_y = event.y
 
-    def verify_image(self):
-        s=""
-        for angle in self.angles:
-            s+=angle
-        print(s)
-
     def decrypt_image(self):
         if self.canvas_image:
-            password = b'pass'
+            s=""
+            for angle in self.angles:
+                s+=str(angle)
+            print(s)
+            password = bytes(s,'utf-8')
+            #password = b'pass'
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
@@ -156,7 +155,11 @@ class ImageViewerApp:
 
     def encrypt_image(self):
         if self.canvas_image:
-            password = b'pass'
+            s=""
+            for angle in self.angles:
+                s+=str(angle)
+            print(s)
+            password = bytes(s,'utf-8')
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
