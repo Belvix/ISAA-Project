@@ -85,6 +85,7 @@ class ImageViewerApp:
         self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         if self.file_path:
             self.original_image = Image.open(self.file_path)
+            self.original_image_copy = self.original_image.copy()
             self.original_image.thumbnail((300, 300))  # Resize image to fit within the frame
             photo = ImageTk.PhotoImage(self.original_image)
             self.image_label.configure(image=photo)
@@ -130,9 +131,10 @@ class ImageViewerApp:
         self.last_y = event.y
 
     def verify_image(self):
-        print(self.lines)
-        print(self.angles)
-        # Add your verification logic here
+        s=""
+        for angle in self.angles:
+            s+=angle
+        print(s)
 
     def decrypt_image(self):
         if self.canvas_image:
@@ -140,12 +142,14 @@ class ImageViewerApp:
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
-            data = self.original_image.tobytes()
+            data = self.original_image_copy.tobytes()
             decrypted_data = cipher.decrypt(data)
 
-            decrypted_image = Image.frombytes("RGB", (self.original_image.width, self.original_image.height), decrypted_data)
+            decrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), decrypted_data)
 
-            self.new_image_label.image = ImageTk.PhotoImage(decrypted_image)
+            img = decrypted_image.copy()
+            img.thumbnail((300,300))
+            self.new_image_label.image = ImageTk.PhotoImage(img)
             self.new_image_label.configure(image=self.new_image_label.image)
             decrypted_image.save("decrypted.png")
 
@@ -156,10 +160,12 @@ class ImageViewerApp:
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
-            data = self.original_image.convert("RGB").tobytes()
+            data = self.original_image_copy.convert("RGB").tobytes()
             ciphertext = cipher.encrypt(data)
-            encrypted_image = Image.frombytes("RGB", (self.original_image.width, self.original_image.height), ciphertext)
-            self.new_image_label.image = ImageTk.PhotoImage(encrypted_image)
+            encrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), ciphertext)
+            img = encrypted_image.copy()
+            img.thumbnail((300,300))
+            self.new_image_label.image = ImageTk.PhotoImage(img)
             self.new_image_label.configure(image=self.new_image_label.image)
             encrypted_image.save("encrypted.png")
 
