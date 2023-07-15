@@ -141,17 +141,13 @@ class ImageViewerApp:
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
             data = self.original_image.tobytes()
-            print(data)
-            fobj = open("t.txt","wb")
-            fobj.write(data)
-            fobj.close()
             decrypted_data = cipher.decrypt(data)
 
             decrypted_image = Image.frombytes("RGB", (self.original_image.width, self.original_image.height), decrypted_data)
 
             self.new_image_label.image = ImageTk.PhotoImage(decrypted_image)
             self.new_image_label.configure(image=self.new_image_label.image)
-            decrypted_image.save("decrypted.jpg")
+            decrypted_image.save("decrypted.png")
 
 
     def encrypt_image(self):
@@ -163,12 +159,9 @@ class ImageViewerApp:
             data = self.original_image.convert("RGB").tobytes()
             ciphertext = cipher.encrypt(data)
             encrypted_image = Image.frombytes("RGB", (self.original_image.width, self.original_image.height), ciphertext)
-            fobj = open("s.txt","wb")
-            fobj.write(ciphertext)
-            fobj.close()
             self.new_image_label.image = ImageTk.PhotoImage(encrypted_image)
             self.new_image_label.configure(image=self.new_image_label.image)
-            encrypted_image.save("encrypted.jpg")
+            encrypted_image.save("encrypted.png")
 
     def clear_canvas(self):
         self.canvas.delete("all")
