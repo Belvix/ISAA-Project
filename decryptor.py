@@ -1,6 +1,8 @@
+import os
 import tkinter as tk
 import math
 from tkinter import filedialog
+import zipfile
 from PIL import ImageTk, Image, ImageDraw
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Cipher import AES
@@ -14,7 +16,7 @@ class ImageViewerApp:
         self.file_path = ""
         self.original_image = None
         self.original_image_copy = None
-        self.canvas_image = None
+        self.canvas_image = Image.new("RGB",(200,300))
         self.drawing = False
         self.last_x = 0
         self.last_y = 0
@@ -79,7 +81,7 @@ class ImageViewerApp:
             self.canvas.create_line(self.last_x, self.last_y, x, y, fill="black", width=2, tags="preview_line")
 
     def open_image(self):
-        self.file_path = filedialog.askopenfilename(filetypes=[("Encrypted files", "*.enc")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("Encrypted files", "*.enc *.zip")])
         if self.file_path:
             self.file_label.config(text=self.file_path.split('/')[-1])
 
@@ -130,7 +132,9 @@ class ImageViewerApp:
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
             data = 0
-            with open(self. file_path,"rb") as fobj:
+            with zipfile.ZipFile('encryption.zip','r') as zip:
+                zip.extractall()
+            with open("encrypted_image.enc","rb") as fobj:
                 data = fobj.read()
             decrypted_data = cipher.decrypt(data)
             decrypted_data = unpad(decrypted_data,AES.block_size)
@@ -138,14 +142,13 @@ class ImageViewerApp:
             with open("data.txt","r") as fobj:
                 size = tuple(map(int,fobj.read().split(",")))
             img = Image.frombytes("RGB",size,decrypted_data)
+            os.remove("encrypted_image.enc")
+            os.remove("data.txt")
             img.save("decrypted.png")
             
 
     def clear_canvas(self):
         self.canvas.delete("all")
-        self.canvas_image = self.original_image.copy()
-        self.new_image_label.image = ImageTk.PhotoImage(self.canvas_image)
-        self.new_image_label.configure(image=self.new_image_label.image)
         self.angle_label.config(text="Angle: ")
         self.line_count = 0
         self.lines = []

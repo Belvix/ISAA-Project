@@ -1,4 +1,6 @@
 import tkinter as tk
+import zipfile
+import os
 import math
 from tkinter import filedialog
 from tkinter import messagebox
@@ -121,7 +123,7 @@ class ImageViewerApp:
         self.last_y = event.y
 
     def encrypt_image(self):
-        if self.canvas_image:
+        if self.file_path:
             s=""
             for angle in self.angles:
                 s+=str(angle)
@@ -140,11 +142,17 @@ class ImageViewerApp:
             with open("data.txt","w") as fobj:
                 fobj.write(str(self.original_image_copy.width)+","+str(self.original_image_copy.height))
             print(self.original_image_copy.width, self.original_image_copy.height)
+            with zipfile.ZipFile('encryption.zip','w') as zip:
+                zip.write("encrypted_image.enc")
+                zip.write("data.txt")
+                os.remove("encrypted_image.enc")
+                os.remove("data.txt")
             messagebox.showinfo("showinfo","Image Encrypted!")
 
     def clear_canvas(self):
         self.canvas.delete("all")
         self.canvas_image = self.original_image.copy()
+        self.original_image.show()
         self.angle_label.config(text="Angle: ")
         self.line_count = 0
         self.lines = []
