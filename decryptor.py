@@ -1,4 +1,3 @@
-import pickle
 import tkinter as tk
 import math
 from tkinter import filedialog
@@ -34,8 +33,8 @@ class ImageViewerApp:
         open_button = tk.Button(left_frame, text="Open Image", command=self.open_image)
         open_button.pack()
 
-        self.image_label = tk.Label(left_frame)
-        self.image_label.pack()
+        self.file_label = tk.Label(left_frame)
+        self.file_label.pack()
 
         middle_frame = tk.Frame(self.window)
         middle_frame.pack(side="left", padx=10, pady=10)
@@ -57,9 +56,6 @@ class ImageViewerApp:
 
         self.new_image_label = tk.Label(right_frame)
         self.new_image_label.pack()
-
-        encrypt_button = tk.Button(right_frame, text="Encrypt", command=self.encrypt_image)
-        encrypt_button.pack()
 
         self.canvas.bind("<Button-1>", self.start_drawing)
         self.canvas.bind("<B1-Motion>", self.preview)
@@ -83,17 +79,9 @@ class ImageViewerApp:
             self.canvas.create_line(self.last_x, self.last_y, x, y, fill="black", width=2, tags="preview_line")
 
     def open_image(self):
-        self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("Encrypted files", "*.enc")])
         if self.file_path:
-            self.original_image = Image.open(self.file_path)
-            self.original_image_copy = self.original_image.copy()
-            self.original_image.thumbnail((300, 300))  # Resize image to fit within the frame
-            photo = ImageTk.PhotoImage(self.original_image)
-            self.image_label.configure(image=photo)
-            self.image_label.image = photo
-            self.new_image_label.configure(image=photo)
-            self.new_image_label.image = photo
-            self.canvas_image = self.original_image.copy()  # Save a copy of the image for the canvas
+            self.file_label.config(text=self.file_path.split('/')[-1])
 
     def start_drawing(self, event):
         if self.line_count == 0:
@@ -132,7 +120,7 @@ class ImageViewerApp:
         self.last_y = event.y
 
     def decrypt_image(self):
-        if self.canvas_image:
+        if self.file_path:
             s=""
             for angle in self.angles:
                 s+=str(angle)
@@ -141,43 +129,17 @@ class ImageViewerApp:
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
-            data = self.original_image_copy.tobytes()
-            # with open("img_e.png","rb") as fobj:
-            #     data = fobj.read()
+            data = 0
+            with open(self. file_path,"rb") as fobj:
+                data = fobj.read()
             decrypted_data = cipher.decrypt(data)
             decrypted_data = unpad(decrypted_data,AES.block_size)
-
-            decrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), decrypted_data)
-
-            img = decrypted_image.copy()
-            img.thumbnail((300,300))
-            self.new_image_label.image = ImageTk.PhotoImage(img)
-            self.new_image_label.configure(image=self.new_image_label.image)
-            decrypted_image.save("decrypted.png")
-
-
-    def encrypt_image(self):
-        if self.canvas_image:
-            s=""
-            for angle in self.angles:
-                s+=str(angle)
-            print(s)
-            password = bytes(s,'utf-8')
-            salt = b'salt'
-            key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
-            cipher = AES.new(key, AES.MODE_CBC)
-            data = self.original_image_copy.convert("RGB").tobytes()
-            data = pad(data,AES.block_size)
-            ciphertext = cipher.encrypt(data)
-            fobj = open("encrypted_image","wb")
-            fobj.write(ciphertext)
-            fobj.close()
-            encrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), ciphertext)
-            img = encrypted_image.copy()
-            img.thumbnail((300,300))
-            self.new_image_label.image = ImageTk.PhotoImage(img)
-            self.new_image_label.configure(image=self.new_image_label.image)
-            encrypted_image.save("encrypted.png")
+            size = ()
+            with open("data.txt","r") as fobj:
+                size = tuple(map(int,fobj.read().split(",")))
+            img = Image.frombytes("RGB",size,decrypted_data)
+            img.save("decrypted.png")
+            
 
     def clear_canvas(self):
         self.canvas.delete("all")
