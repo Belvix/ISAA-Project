@@ -1,3 +1,4 @@
+import pickle
 import tkinter as tk
 import math
 from tkinter import filedialog
@@ -82,7 +83,7 @@ class ImageViewerApp:
             self.canvas.create_line(self.last_x, self.last_y, x, y, fill="black", width=2, tags="preview_line")
 
     def open_image(self):
-        self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp")])
         if self.file_path:
             self.original_image = Image.open(self.file_path)
             self.original_image_copy = self.original_image.copy()
@@ -137,12 +138,14 @@ class ImageViewerApp:
                 s+=str(angle)
             print(s)
             password = bytes(s,'utf-8')
-            #password = b'pass'
             salt = b'salt'
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
             data = self.original_image_copy.tobytes()
+            # with open("img_e.png","rb") as fobj:
+            #     data = fobj.read()
             decrypted_data = cipher.decrypt(data)
+            decrypted_data = unpad(decrypted_data,AES.block_size)
 
             decrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), decrypted_data)
 
@@ -164,7 +167,11 @@ class ImageViewerApp:
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
             data = self.original_image_copy.convert("RGB").tobytes()
+            data = pad(data,AES.block_size)
             ciphertext = cipher.encrypt(data)
+            fobj = open("encrypted_image","wb")
+            fobj.write(ciphertext)
+            fobj.close()
             encrypted_image = Image.frombytes("RGB", (self.original_image_copy.width, self.original_image_copy.height), ciphertext)
             img = encrypted_image.copy()
             img.thumbnail((300,300))
