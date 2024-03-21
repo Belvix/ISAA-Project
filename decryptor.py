@@ -25,6 +25,7 @@ class ImageViewerApp:
         self.line_count = 0
         self.lines = []
         self.angles = []
+        self.angle_labels: list[tk.Label] = []
 
         self.create_ui()
 
@@ -53,11 +54,17 @@ class ImageViewerApp:
         self.angle_label = tk.Label(middle_frame, text="Angle: ")
         self.angle_label.pack()
 
-        right_frame = tk.Frame(self.window)
-        right_frame.pack(side="left", padx=10, pady=10)
+        # right_frame = tk.Frame(self.window)
+        # right_frame.pack(side="left", padx=10, pady=10)
 
-        self.new_image_label = tk.Label(right_frame)
-        self.new_image_label.pack()
+        # self.new_image_label = tk.Label(right_frame)
+        # self.new_image_label.pack()
+
+        self.right_frame = tk.Frame(self.window, bd=2, relief="solid")
+        self.right_frame.pack(side="right",fill="y", expand=True,padx=10,pady=10)
+
+        self.angles_label = tk.Label(self.right_frame,text="Angle History")
+        self.angles_label.pack(anchor="n")
 
         self.canvas.bind("<Button-1>", self.start_drawing)
         self.canvas.bind("<B1-Motion>", self.preview)
@@ -98,6 +105,14 @@ class ImageViewerApp:
             self.canvas.delete("preview_line")
             self.line_count += 1
             self.draw(event)
+            self.update_angle_history()
+
+    def update_angle_history(self):
+        angle_label = tk.Label(self.right_frame,text=self.angles[-1])
+        self.angle_labels.append(angle_label)
+
+        for label in self.angle_labels:
+            label.pack()
 
     def draw(self, event):
         x = event.x
@@ -154,6 +169,13 @@ class ImageViewerApp:
         self.line_count = 0
         self.lines = []
         self.angles = []
+
+        for label in self.angle_labels:
+            label.destroy()
+
+        self.angle_labels = []
+
+        self.right_frame.update_idletasks()
 
 if __name__ == "__main__":
     window = tk.Tk()

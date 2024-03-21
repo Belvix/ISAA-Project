@@ -112,8 +112,6 @@ class ImageViewerApp:
         angle_label = tk.Label(self.right_frame,text=self.angles[-1])
         self.angle_labels.append(angle_label)
 
-        print('ye')
-
         for label in self.angle_labels:
             label.pack()
 
