@@ -26,6 +26,7 @@ class ImageViewerApp:
         self.line_count = 0
         self.lines = []
         self.angles = []
+        self.angle_labels: list[tk.Label] = []
 
         self.create_ui()
 
@@ -57,6 +58,12 @@ class ImageViewerApp:
         self.canvas.bind("<Button-1>", self.start_drawing)
         self.canvas.bind("<B1-Motion>", self.preview)
         self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
+
+        self.right_frame = tk.Frame(self.window, bd=2, relief="solid")
+        self.right_frame.pack(side="right",fill="y", expand=True,padx=10,pady=10)
+
+        self.angles_label = tk.Label(self.right_frame,text="Angle History")
+        self.angles_label.pack(anchor="n")
 
     def preview(self, event):
         if self.drawing:
@@ -99,12 +106,22 @@ class ImageViewerApp:
             self.canvas.delete("preview_line")
             self.line_count += 1
             self.draw(event)
+            self.update_angle_history()
+
+    def update_angle_history(self):
+        angle_label = tk.Label(self.right_frame,text=self.angles[-1])
+        self.angle_labels.append(angle_label)
+
+        print('ye')
+
+        for label in self.angle_labels:
+            label.pack()
 
     def draw(self, event):
         x = event.x
         y = event.y
         self.canvas.create_line(self.last_x, self.last_y, x, y, fill="black", width=2)
-        draw = ImageDraw.Draw(self.canvas_image)
+       # draw = ImageDraw.Draw(self.canvas_image)
         dx1 = self.last_last_x - self.last_x
         dy1 = self.last_last_y - self.last_y
         dx2 = event.x - self.last_x
@@ -115,7 +132,7 @@ class ImageViewerApp:
         if self.line_count > 1:
             rounded_angle = math.ceil(angle / 5.0) * 5.0
             self.angles.append(rounded_angle)
-        draw.line([(self.last_x, self.last_y), (x, y)], fill="black", width=2)
+        #draw.line([(self.last_x, self.last_y), (x, y)], fill="black", width=2)
         self.lines.append(((self.last_x, self.last_y), (x, y)))
         self.last_last_x = self.last_x
         self.last_last_y = self.last_y
@@ -142,7 +159,7 @@ class ImageViewerApp:
             with open("data.txt","w") as fobj:
                 fobj.write(str(self.original_image_copy.width)+","+str(self.original_image_copy.height))
             print(self.original_image_copy.width, self.original_image_copy.height)
-            with zipfile.ZipFile('encryption.zip','w') as zip:
+            with zipfile.ZipFile('encryption.encrypted','w') as zip:
                 zip.write("encrypted_image.enc")
                 zip.write("data.txt")
                 os.remove("encrypted_image.enc")
@@ -151,12 +168,19 @@ class ImageViewerApp:
 
     def clear_canvas(self):
         self.canvas.delete("all")
-        self.canvas_image = self.original_image.copy()
-        self.original_image.show()
+        #self.canvas_image = self.original_image.copy()
+        #self.original_image.show()
         self.angle_label.config(text="Angle: ")
         self.line_count = 0
         self.lines = []
         self.angles = []
+
+        for label in self.angle_labels:
+            label.destroy()
+
+        self.angle_labels = []
+
+        self.right_frame.update_idletasks()
 
 if __name__ == "__main__":
     window = tk.Tk()

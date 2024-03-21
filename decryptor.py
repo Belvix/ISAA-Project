@@ -81,7 +81,7 @@ class ImageViewerApp:
             self.canvas.create_line(self.last_x, self.last_y, x, y, fill="black", width=2, tags="preview_line")
 
     def open_image(self):
-        self.file_path = filedialog.askopenfilename(filetypes=[("Encrypted files", "*.enc *.zip")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("Encrypted files", "*.enc *.zip *.encrypted")])
         if self.file_path:
             self.file_label.config(text=self.file_path.split('/')[-1])
 
@@ -132,7 +132,8 @@ class ImageViewerApp:
             key = scrypt(password, salt, 32, N=2 ** 14, r=8, p=1)
             cipher = AES.new(key, AES.MODE_CBC)
             data = 0
-            with zipfile.ZipFile('encryption.zip','r') as zip:
+            print(self.file_path.split('/')[-1])
+            with zipfile.ZipFile(self.file_path.split('/')[-1],'r') as zip:
                 zip.extractall()
             with open("encrypted_image.enc","rb") as fobj:
                 data = fobj.read()
